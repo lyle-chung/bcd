@@ -1,7 +1,5 @@
 /* vi: set sw=4 ts=4: */
 /*-----------------------------------------------------------------------------
- *
- * 
  *-----------------------------------------------------------------------------
  */
 
@@ -15,26 +13,26 @@
 #include "const.h"
 #include "message.h"
 
-
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	int ret;
-	unsigned char	*data;
+	char *data;
 
 	ret = nvram_commit(0);
-	printf("\n commit = [%d]", ret); fflush(stdout);
+	printf("\n commit = [%d]", ret);
+	fflush(stdout);
 
-	if(argc==2) {
+	if (argc == 2) {
 		data = nvram_bufget(0, argv[1]);
-		printf("\n read  = [%s]", data); fflush(stdout);
+		printf("\n read  = [%s]", data);
+		fflush(stdout);
 	}
 
-	if(argc==3) {
+	if (argc == 3) {
 		nvram_bufset(0, argv[1], argv[2]);
-		printf("\n write = [%s]", argv[2]); fflush(stdout);
+		printf("\n write = [%s]", argv[2]);
+		fflush(stdout);
 	}
-
 
 	return 0;
 }
-
-

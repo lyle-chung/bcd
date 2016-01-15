@@ -1,24 +1,21 @@
 #ifndef __LINKED_H__
 #define __LINKED_H__
 
-
 /*******************************
 Linked list function proto (locally function)
 *******************************/
-struct listnode
-{
+struct listnode {
 	struct listnode *next;
 	struct listnode *prev;
-	void     *data;
+	void *data;
 };
 
-struct list
-{
+struct list {
 	struct listnode *head;
 	struct listnode *tail;
-	unsigned int count;
-	int       (*cmp) (void *val1, void *val2);
-	void      (*del) (void *val);
+	int count;
+	int (*cmp) (void *val1, void *val2);
+	void (*del) (void *val);
 };
 
 #define nextnode(X) ((X) = (X)->next)
@@ -26,9 +23,6 @@ struct list
 #define listcount(X) ((X)->count)
 #define list_isempty(X) ((X)->head == NULL && (X)->tail == NULL)
 #define getdata(X) ((X)->data)
-
-
-
 
 /* List iteration macro. */
 #define LIST_LOOP(L,V,N) \
@@ -59,38 +53,34 @@ struct list
       (L)->tail = (N)->prev; \
   } while (0)
 
-
-
 //############################################
 //FLASH entry info.
 //############################################
 typedef struct __NODE {
-	unsigned char	*name;
-	unsigned char	*value;
-	
+	char *name;
+	char *value;
+  char user;
+
 	//specific call function
-	int (*job)(void*);
+	int (*job) (void *);
 
 } NODE;
 
-
-
 /* Prototypes. */
 extern struct list *list_new();
-extern void      list_free(struct list *);
+extern void list_free(struct list *);
 
-extern void      listnode_add(struct list *, void *);
-extern void      listnode_add_sort(struct list *, void *);
-extern void      listnode_add_after(struct list *, struct listnode *, void *);
-extern void      listnode_delete(struct list *, void *);
+extern void listnode_add(struct list *, void *);
+extern void listnode_add_sort(struct list *, void *);
+extern void listnode_add_after(struct list *, struct listnode *, void *);
+extern void listnode_delete(struct list *, void *);
 extern struct listnode *listnode_lookup(struct list *, void *);
-extern void     *listnode_head(struct list *);
+extern void *listnode_head(struct list *);
 
-extern void      list_delete(struct list *);
-extern void      list_delete_all_node(struct list *);
+extern void list_delete(struct list *);
+extern void list_delete_all_node(struct list *);
 
 extern void nodelist_init();
-extern NODE   *node_lookup_by_name(unsigned char *name);
-
+extern NODE *node_lookup_by_name(char *name);
 
 #endif

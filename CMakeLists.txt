@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.0)
+
 ADD_DEFINITIONS(-Wall)
 
 add_executable(bcd bcd.c bcd_linked.c const.h crc32.c flash.c flash.h linked.c message.c syslog.c) 

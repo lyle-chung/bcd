@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=4: */
 /*-----------------------------------------------------------------------------
- * 
+ * Confidential
  *-----------------------------------------------------------------------------
  */
 
@@ -21,113 +21,110 @@
 #include "message.h"
 #include "linked.h"
 
-
 /*******************************
 GLOBAL
 *******************************/
-struct list	*bufferlist=NULL;
-
+struct list *bufferlist = NULL;
 
 /*******************************
 EXTERN
 *******************************/
 extern int MessageID;
 
-
 /*******************************
 Buffer APIs : INTERNALLY USE.
 *******************************/
 
-static void buffer_init() {
+static void buffer_init()
+{
 	bufferlist = list_new();
 }
 
-static void string_check_and_conv(unsigned char *name, unsigned char *str) {
-    int i;
+static void string_check_and_conv(char *name, char *str)
+{
+	int i;
 
-    strcpy(str, name);
-    for(i=0; i<strlen(str); i++) {
+	strcpy(str, name);
+	for (i = 0; i < strlen(str); i++) {
 		//special char " --> ' '
-		if(*(str+i) == SPACE_CHARACTER)
-            *(str+i) = ' ';
-        //CR is same as NULL/end of word.
-        if(*(str+i) == 0x0d)
-            *(str+i) = 0x00;
-    }
-    return;
+		if (*(str + i) == SPACE_CHARACTER)
+			*(str + i) = ' ';
+		//CR is same as NULL/end of word.
+		if (*(str + i) == 0x0d)
+			*(str + i) = 0x00;
+	}
+	return;
 }
 
 /* Create new node structure. */
-static NODE     *buffer_new()
+static NODE *buffer_new()
 {
-    NODE     *pNode;
+	NODE *pNode;
 
-    pNode = malloc(sizeof(NODE));
-    memset(pNode, 0, sizeof(NODE));
-    return pNode;
+	pNode = malloc(sizeof(NODE));
+	memset(pNode, 0, sizeof(NODE));
+	return pNode;
 }
 
 /* existance check */
-static NODE     *buffer_lookup_by_name(unsigned char *name)
+static NODE *buffer_lookup_by_name(char *name)
 {
-    struct listnode *node;
-    NODE     *pNode;
+	struct listnode *node;
+	NODE *pNode;
 
-    for (node = listhead(bufferlist); node; nextnode(node)) {
-        pNode = getdata(node);
-        if (strcmp(pNode->name, name) == 0)
-            return pNode;
-    }
-    return NULL;
+	for (node = listhead(bufferlist); node; nextnode(node)) {
+		pNode = getdata(node);
+		if (strcmp(pNode->name, name) == 0)
+			return pNode;
+	}
+	return NULL;
 }
 
-static unsigned char *buffer_update(unsigned char *name, unsigned char *data) {
-	NODE	*pNode;
-    unsigned char   *name_str;
-    unsigned char   *data_str;
+static char *buffer_update(char *name, char *data)
+{
+	NODE *pNode;
+	char *name_str;
+	char *data_str;
 
-    name_str = malloc(128);
-    data_str = malloc(1024);
+	name_str = malloc(128);
+	data_str = malloc(1024);
 
 	//init root node
-	if(!bufferlist) 
+	if (!bufferlist)
 		buffer_init();
 
-    //valid check and convert special character: #
-    string_check_and_conv(name, name_str);
-    string_check_and_conv(data, data_str);
+	//valid check and convert special character: #
+	string_check_and_conv(name, name_str);
+	string_check_and_conv(data, data_str);
 
 	pNode = buffer_lookup_by_name(name);
-	if(!pNode) {
+	if (!pNode) {
 		//create and link
-        pNode = buffer_new();
-        pNode->name = NULL;
-        pNode->value = NULL;
-        listnode_add(bufferlist, pNode);
+		pNode = buffer_new();
+		pNode->name = NULL;
+		pNode->value = NULL;
+		listnode_add(bufferlist, pNode);
 	} else {
-        //just update
-        //first, free
-        if (pNode->name)
-            free(pNode->name);
-        if (pNode->value)
-            free(pNode->value);
+		//just update
+		//first, free
+		if (pNode->name)
+			free(pNode->name);
+		if (pNode->value)
+			free(pNode->value);
 	}
 
 	//update
-    if (name_str)
-        pNode->name = strdup(name_str);
-    if (data_str)
-        pNode->value = strdup(data_str);
-		
-    free(name_str);
-    free(data_str);
+	if (name_str)
+		pNode->name = strdup(name_str);
+	if (data_str)
+		pNode->value = strdup(data_str);
+
+	free(name_str);
+	free(data_str);
 
 	//return data pointer for processing
-    return (pNode->value);
+	return (pNode->value);
 }
-
-
-
 
 /*******************************
 Fn.
@@ -135,14 +132,14 @@ Fn.
 
 int get_message_id(int flags)
 {
-	int       mid;
-	int       cnt;
+	int mid;
+	int cnt;
 
 	cnt = 0;
 	do {
 		mid = msgget(MSG_KEY, flags);
 		if (mid < 0) {
-			char      buf[128];
+			char buf[128];
 			sprintf(buf, "ipcrm -Q %d", MSG_KEY);
 			system(buf);
 			cnt++;
@@ -171,10 +168,10 @@ void reset_alarm_fn(int arg)
 //block and alarm mode 
 int receive_message_with_alarm(int mid, MSG * msg, int mtype, int alrm)
 {
-	int       ret;
+	int ret;
 
 	//for receive message at block mode
-	signal(SIGALRM, (void*)reset_alarm_fn);
+	signal(SIGALRM, (void *)reset_alarm_fn);
 
 	//start alarm
 	alarm(alrm);
@@ -190,28 +187,30 @@ int receive_message_with_alarm(int mid, MSG * msg, int mtype, int alrm)
 
 int send_message(int mid, MSG * msg)
 {
-	int       ret, len;
+	int ret, len;
 
 	//Name length is fixed(128bytes.), BUT, msg.data is variable.
-	//len = sizeof(unsigned char) + sizeof(pid_t) + Name length(128) + strlen(msg->data) + 1;  
-	len = sizeof(unsigned char) + sizeof(pid_t) + MSG_MAX_NAME_LEN + strlen(msg->data) + 1;
+	//len = sizeof(char) + sizeof(pid_t) + Name length(128) + strlen(msg->data) + 1;  
+	len =
+	    sizeof(char) + sizeof(pid_t) + MSG_MAX_NAME_LEN +
+	    strlen(msg->data) + 1;
 	ret = msgsnd(mid, msg, len, 0);
 
-	//printf("\n[%d][%d][%d][%d]", len, sizeof(unsigned char), sizeof(pid_t), strlen(msg->data));
+	//printf("\n[%d][%d][%d][%d]", len, sizeof(char), sizeof(pid_t), strlen(msg->data));
 	return ret;
 }
 
 /*******************************
 APIs
 *******************************/
-unsigned char *config_get(unsigned char *name)
+char *config_get(const char *name)
 {
-	MSG       msg, msg_r;
-	int       pid;
-	int       mid;
-	int       cnt;
-	int       ret;
-	unsigned char *data;
+	MSG msg, msg_r;
+	int pid;
+	int mid;
+	int cnt;
+	int ret;
+	char *data;
 
 	//1. get process ID
 	pid = getpid();
@@ -221,7 +220,6 @@ unsigned char *config_get(unsigned char *name)
 	if (mid == -1) {
 		return NULL_STR;
 	}
-
 	//3. set message
 	memset(&msg, 0, sizeof(MSG));
 	memset(&msg_r, 0, sizeof(MSG));
@@ -236,11 +234,12 @@ unsigned char *config_get(unsigned char *name)
 	//5: receive result or ACK
 	cnt = 0;
 	do {
-		ret = receive_message_with_alarm(mid, &msg_r, get_mtype_for_reply(msg.pid), 5);
+		ret =
+		    receive_message_with_alarm(mid, &msg_r,
+					       get_mtype_for_reply(msg.pid), 5);
 		if (ret < 0) {
 			return NULL_STR;
-		}
-		else {
+		} else {
 			if (msg_r.cmd == CMD_RET_FAIL) {
 				return NULL_STR;
 			}
@@ -259,22 +258,55 @@ unsigned char *config_get(unsigned char *name)
 	else
 		return NULL_STR;
 }
-unsigned char *nvram_bufget(int board_type, unsigned char *name) {
-	return config_get(name);
+
+int config_get_int(const char *name) {
+	static char	buf[MSG_MAX_DATA_LEN];
+
+	strcpy(buf, config_get(name));
+	return (int)strtol(buf, NULL, 10);
 }
-unsigned char *nvram_get(int board_type, unsigned char *name) {
-	return config_get(name);
+
+short config_get_int16(const char *name) {
+	static char	buf[MSG_MAX_DATA_LEN];
+
+	strcpy(buf, config_get(name));
+	return (short)strtol(buf, NULL, 10);
 }
 
+char config_get_int8(const char *name) {
+	static char	buf[MSG_MAX_DATA_LEN];
 
+	strcpy(buf, config_get(name));
+	return (char)strtol(buf, NULL, 10);
+}
 
-int config_set(unsigned char *name, unsigned char *data)
+double config_get_float(const char *name) {
+	static char	buf[MSG_MAX_DATA_LEN];
+
+	strcpy(buf, config_get(name));
+	return (float)strtod(buf, NULL);
+}
+
+double config_get_double(const char *name) {
+	static char	buf[MSG_MAX_DATA_LEN];
+
+	strcpy(buf, config_get(name));
+	return (double)strtod(buf, NULL);
+}
+
+int config_set(const char *name, const char *data)
 {
-	MSG       msg, msg_r;
-	int       pid;
-	int       mid;
-	int       cnt;
-	int       ret;
+	MSG msg, msg_r;
+	int pid;
+	int mid;
+	int cnt;
+	int ret;
+
+    //0.
+    if (strlen(data) > MSG_MAX_REAL_DATA_LEN) {
+        return -1;
+    }
+
 	//1. get process ID
 	pid = getpid();
 
@@ -283,7 +315,6 @@ int config_set(unsigned char *name, unsigned char *data)
 	if (mid == -1) {
 		return -1;
 	}
-
 	//3. set message
 	memset(&msg, 0, sizeof(MSG));
 	memset(&msg_r, 0, sizeof(MSG));
@@ -299,11 +330,12 @@ int config_set(unsigned char *name, unsigned char *data)
 	//5: receive result or ACK
 	cnt = 0;
 	do {
-		ret = receive_message_with_alarm(mid, &msg_r, get_mtype_for_reply(msg.pid), 5);
+		ret =
+		    receive_message_with_alarm(mid, &msg_r,
+					       get_mtype_for_reply(msg.pid), 5);
 		if (ret < 0) {
 			return -1;
-		}
-		else {
+		} else {
 			if (msg_r.cmd == CMD_RET_FAIL) {
 				return -1;
 			}
@@ -320,31 +352,61 @@ int config_set(unsigned char *name, unsigned char *data)
 	else
 		return -1;
 }
-int nvram_bufset(int board_type, unsigned char *name, unsigned char *data) {
-	return config_set(name, data);
-}
-int nvram_set(int board_type, unsigned char *name, unsigned char *data) {
-	return config_set(name, data);
+
+int config_set_int(const char *name, const int value) {
+	static char buf[MSG_MAX_DATA_LEN];
+
+	sprintf(buf, "%d", value);
+	config_set(name, buf);
+
+	return 0;
 }
 
+int config_set_int16(const char *name, const short value) {
+	static char buf[MSG_MAX_DATA_LEN];
+
+	sprintf(buf, "%d", value);
+	config_set(name, buf);
+
+	return 0;
+}
+
+int config_set_int8(const char *name, const char value) {
+	static char buf[MSG_MAX_DATA_LEN];
+
+    memset(buf, 0, sizeof(char) * MSG_MAX_DATA_LEN);
+	sprintf(buf, "%d", value);
+	config_set(name, buf);
+
+	return 0;
+}
+
+int config_set_double(const char *name, const double value) {
+	static char buf[MSG_MAX_DATA_LEN];
+
+	sprintf(buf, "%f", value);
+	config_set(name, buf);
+
+	return 0;
+}
 
 //for logging system
 int bcd_logging(const char *format, ...)
 {
-	MSG       msg, msg_r;
-	int       pid;
-	int       mid;
-	int       cnt;
-	int       ret;
-	static unsigned char data[MAX_PRINT_LEN];
-	va_list   args;
-	int       len;
-    
+	MSG msg, msg_r;
+	int pid;
+	int mid;
+	int cnt;
+	int ret;
+	static char data[MAX_PRINT_LEN];
+	va_list args;
+	int len;
+
 	va_start(args, format);
 	len = vsnprintf(data, sizeof data, format, args);
 	va_end(args);
 	if (len < 0 || len > MAX_PRINT_LEN)
-		return;
+		return -1;
 
 	//1. get process ID
 	pid = getpid();
@@ -354,13 +416,12 @@ int bcd_logging(const char *format, ...)
 	if (mid == -1) {
 		return -1;
 	}
-
 	//3. set message
 	memset(&msg, 0, sizeof(MSG));
 	memset(&msg_r, 0, sizeof(MSG));
 	msg.mtype = MTYPE_LOG;
 	msg.pid = pid;
-	sprintf(msg.name, "log");	//don't care string.
+	sprintf(msg.name, "%s", "log");	//don't care string.
 	sprintf(msg.data, "%s", data);
 	msg.cmd = CMD_WRITE;
 
@@ -370,11 +431,12 @@ int bcd_logging(const char *format, ...)
 	//5: receive result or ACK
 	cnt = 0;
 	do {
-		ret = receive_message_with_alarm(mid, &msg_r, get_mtype_for_reply(msg.pid), 5);
+		ret =
+		    receive_message_with_alarm(mid, &msg_r,
+					       get_mtype_for_reply(msg.pid), 5);
 		if (ret < 0) {
 			return -1;
-		}
-		else {
+		} else {
 			if (msg_r.cmd == CMD_RET_FAIL) {
 				return -1;
 			}
@@ -394,11 +456,11 @@ int bcd_logging(const char *format, ...)
 
 int config_commit()
 {
-	MSG       msg, msg_r;
-	int       pid;
-	int       mid;
-	int       cnt;
-	int       ret;
+	MSG msg, msg_r;
+	int pid;
+	int mid;
+	int cnt;
+	int ret;
 
 	//1. get process ID
 	pid = getpid();
@@ -408,7 +470,6 @@ int config_commit()
 	if (mid == -1) {
 		return -1;
 	}
-
 	//3. set message
 	memset(&msg, 0, sizeof(MSG));
 	memset(&msg_r, 0, sizeof(MSG));
@@ -422,11 +483,12 @@ int config_commit()
 	//5: receive result or ACK
 	cnt = 0;
 	do {
-		ret = receive_message_with_alarm(mid, &msg_r, get_mtype_for_reply(msg.pid), 5);
+		ret =
+		    receive_message_with_alarm(mid, &msg_r,
+					       get_mtype_for_reply(msg.pid), 5);
 		if (ret < 0) {
 			return -1;
-		}
-		else {
+		} else {
 			if (msg_r.cmd == CMD_RET_FAIL) {
 				return -1;
 			}
@@ -437,10 +499,4 @@ int config_commit()
 	} while (cnt++ < 3);
 	return -2;
 }
-int nvram_commit(int board_type) {
-	return config_commit();
-}
-
-
-
 

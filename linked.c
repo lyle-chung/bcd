@@ -9,23 +9,20 @@
 prototype
 *******************************/
 struct list *list_new();
-void      list_free(struct list *);
+void list_free(struct list *);
 struct listnode *listnode_new();
-void      listnode_add(struct list *, void *);
-void      listnode_add_sort(struct list *, void *);
-void      listnode_add_after(struct list *, struct listnode *, void *);
-void      listnode_delete(struct list *, void *);
+void listnode_add(struct list *, void *);
+void listnode_add_sort(struct list *, void *);
+void listnode_add_after(struct list *, struct listnode *, void *);
+void listnode_delete(struct list *, void *);
 struct listnode *listnode_lookup(struct list *, void *);
-void     *listnode_head(struct list *);
-void      list_delete(struct list *);
-void      list_delete_all_node(struct list *);
+void *listnode_head(struct list *);
+void list_delete(struct list *);
+void list_delete_all_node(struct list *);
 
 /*******************************
 global variable
 *******************************/
-
-
-
 
 /*******************************
 locally functions
@@ -76,12 +73,12 @@ void listnode_add(struct list *list, void *val)
 	node->data = val;
 
 	if (list->head == NULL)
-		list->    head = node;
+		list->head = node;
 	else
-		list->    tail->next = node;
-	list->    tail = node;
+		list->tail->next = node;
+	list->tail = node;
 
-	list->    count++;
+	list->count++;
 }
 
 /* Add new node with sort function. */
@@ -102,9 +99,9 @@ void listnode_add_sort(struct list *list, void *val)
 				if (n->prev)
 					n->prev->next = new;
 				else
-					list->    head = new;
+					list->head = new;
 				n->prev = new;
-				list->    count++;
+				list->count++;
 				return;
 			}
 		}
@@ -113,12 +110,12 @@ void listnode_add_sort(struct list *list, void *val)
 	new->prev = list->tail;
 
 	if (list->tail)
-		list->    tail->next = new;
+		list->tail->next = new;
 	else
-		list->    head = new;
+		list->head = new;
 
-	list->    tail = new;
-	list->    count++;
+	list->tail = new;
+	list->count++;
 }
 
 void listnode_add_after(struct list *list, struct listnode *pp, void *val)
@@ -130,20 +127,19 @@ void listnode_add_after(struct list *list, struct listnode *pp, void *val)
 
 	if (pp == NULL) {
 		if (list->head)
-			list->    head->prev = nn;
+			list->head->prev = nn;
 		else
-			list->    tail = nn;
+			list->tail = nn;
 
 		nn->next = list->head;
 		nn->prev = pp;
 
-		list->    head = nn;
-	}
-	else {
+		list->head = nn;
+	} else {
 		if (pp->next)
 			pp->next->prev = nn;
 		else
-			list->    tail = nn;
+			list->tail = nn;
 
 		nn->next = pp->next;
 		nn->prev = pp;
@@ -162,14 +158,14 @@ void listnode_delete(struct list *list, void *val)
 			if (node->prev)
 				node->prev->next = node->next;
 			else
-				list->    head = node->next;
+				list->head = node->next;
 
 			if (node->next)
 				node->next->prev = node->prev;
 			else
-				list->    tail = node->prev;
+				list->tail = node->prev;
 
-			list->    count--;
+			list->count--;
 			listnode_free(node);
 			return;
 		}
@@ -177,7 +173,7 @@ void listnode_delete(struct list *list, void *val)
 }
 
 /* Return first node's data if it is there.  */
-void     *listnode_head(struct list *list)
+void *listnode_head(struct list *list)
 {
 	struct listnode *node;
 
@@ -200,8 +196,8 @@ void list_delete_all_node(struct list *list)
 			(*list->del) (node->data);
 		listnode_free(node);
 	}
-	list->    head = list->tail = NULL;
-	list->    count = 0;
+	list->head = list->tail = NULL;
+	list->count = 0;
 }
 
 /* Delete all listnode then free list itself. */
@@ -224,9 +220,11 @@ struct listnode *listnode_lookup(struct list *list, void *data)
 {
 	struct listnode *node;
 
-	for (node = list->head; node; nextnode(node))
-		if (data == getdata(node))
+	for (node = list->head; node; nextnode(node)) {
+		if (data == getdata(node)) {
 			return node;
+    }
+  }
 	return NULL;
 }
 
@@ -238,9 +236,9 @@ struct listnode *listnode_lookup(struct list *list, void *data)
 
 #if 0
 
-NODE     *node_new()
+NODE *node_new()
 {
-	NODE     *pNode;
+	NODE *pNode;
 
 	pNode = malloc(sizeof(NODE));
 	memset(pNode, 0, sizeof(NODE));
@@ -248,10 +246,10 @@ NODE     *node_new()
 }
 
 /* existance check */
-NODE     *node_lookup_by_name(unsigned char *name)
+NODE *node_lookup_by_name(char *name)
 {
 	struct listnode *node;
-	NODE     *pNode;
+	NODE *pNode;
 
 	for (node = listhead(nodelist); node; nextnode(node)) {
 		pNode = getdata(node);
@@ -261,30 +259,29 @@ NODE     *node_lookup_by_name(unsigned char *name)
 	return NULL;
 }
 
-void string_check_and_conv(unsigned char *name, unsigned char *str) {
+void string_check_and_conv(char *name, char *str)
+{
 	int i;
 
 	strcpy(str, name);
-	for(i=0; i<strlen(str); i++) {
+	for (i = 0; i < strlen(str); i++) {
 		//special char # --> ' '
-		if(*(str+i) == '#')
-			*(str+i) = ' ';
+		if (*(str + i) == '#')
+			*(str + i) = ' ';
 		//CR is same as NULL/end of word.
-		if(*(str+i) == 0x0d)
-			*(str+i) = 0x00;
+		if (*(str + i) == 0x0d)
+			*(str + i) = 0x00;
 	}
 	return;
 }
 
-
-
 /* set default node structure. */
 /* if noe exist, first create */
-NODE     *node_update(unsigned char *name, unsigned char *value)
+NODE *node_update(char *name, char *value)
 {
-	NODE     *pNode;
-	unsigned char	*name_str;
-	unsigned char	*value_str;
+	NODE *pNode;
+	char *name_str;
+	char *value_str;
 
 	name_str = malloc(128);
 	value_str = malloc(1024);
@@ -293,7 +290,6 @@ NODE     *node_update(unsigned char *name, unsigned char *value)
 	string_check_and_conv(name, name_str);
 	string_check_and_conv(value, value_str);
 
-
 	pNode = node_lookup_by_name(name_str);
 	if (!pNode) {
 		//create and update
@@ -301,8 +297,7 @@ NODE     *node_update(unsigned char *name, unsigned char *value)
 		pNode->name = NULL;
 		pNode->value = NULL;
 		listnode_add(nodelist, pNode);
-	}
-	else {
+	} else {
 		//just update
 		//first, free
 		if (pNode->name)
@@ -336,7 +331,7 @@ void node_delete(NODE * pNode)
 }
 
 /* register function handler */
-int register_node_handler(NODE *pNode, int (*job)(void*))
+int register_node_handler(NODE * pNode, int (*job) (void *))
 {
 	if (pNode && job) {
 		pNode->job = job;
@@ -345,10 +340,5 @@ int register_node_handler(NODE *pNode, int (*job)(void*))
 	}
 	return 0;
 }
-	
 
 #endif
-
-
-
-
